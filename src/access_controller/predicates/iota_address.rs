@@ -109,13 +109,14 @@ where
 mod test {
     use indoc::indoc;
     use iota_types::base_types::IotaAddress;
+    use move_core_types::account_address::AccountAddress;
 
     use super::ValueIotaAddress;
 
     #[test]
     fn test_include_from_one() {
-        let iota_address = IotaAddress::new([1; 32]);
-        let iota_address_not_included = IotaAddress::new([2; 32]);
+        let iota_address = IotaAddress::from(AccountAddress::new([1; 32]));
+        let iota_address_not_included = IotaAddress::from(AccountAddress::new([2; 32]));
 
         let value_iota_address = ValueIotaAddress::from([iota_address]);
 
@@ -125,9 +126,9 @@ mod test {
 
     #[test]
     fn test_include_from_many() {
-        let iota_address1 = IotaAddress::new([1; 32]);
-        let iota_address2 = IotaAddress::new([2; 32]);
-        let iota_address_not_included = IotaAddress::new([3; 32]);
+        let iota_address1 = IotaAddress::from(AccountAddress::new([1; 32]));
+        let iota_address2 = IotaAddress::from(AccountAddress::new([2; 32]));
+        let iota_address_not_included = IotaAddress::from(AccountAddress::new([3; 32]));
 
         let value_iota_address = ValueIotaAddress::from([iota_address1, iota_address2]);
 
@@ -138,7 +139,7 @@ mod test {
 
     #[test]
     fn test_serde_one_address() {
-        let iota_address = IotaAddress::new([1; 32]);
+        let iota_address = IotaAddress::from(AccountAddress::new([1; 32]));
         let value_iota_address = ValueIotaAddress::Single(iota_address);
         let data = serde_yaml::to_string(&value_iota_address).unwrap();
 
@@ -157,7 +158,7 @@ mod test {
 
     #[test]
     fn test_serde_multiple_addresses() {
-        let iota_address = IotaAddress::new([1; 32]);
+        let iota_address = IotaAddress::from(AccountAddress::new([1; 32]));
         let value_iota_address = ValueIotaAddress::List(vec![iota_address, iota_address]);
         let data = serde_yaml::to_string(&value_iota_address).unwrap();
         assert_eq!(

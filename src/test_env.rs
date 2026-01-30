@@ -20,6 +20,7 @@ use async_trait::async_trait;
 use iota_config::local_ip_utils::{get_available_port, localhost_for_testing};
 use iota_swarm_config::genesis_config::AccountConfig;
 use iota_types::base_types::{IotaAddress, ObjectRef};
+use move_core_types::account_address::AccountAddress;
 use iota_types::crypto::get_account_key_pair;
 use iota_types::gas_coin::NANOS_PER_IOTA;
 use iota_types::signature::GenericSignature;
@@ -218,7 +219,7 @@ pub async fn new_stats_tracker_for_testing(sponsor_address: IotaAddress) -> Stat
 
 pub fn random_address() -> IotaAddress {
     let random_bytes = rand::random::<[u8; 32]>();
-    IotaAddress::new(random_bytes)
+    IotaAddress::from(AccountAddress::new(random_bytes))
 }
 
 struct MockedStatsTrackerStorage;

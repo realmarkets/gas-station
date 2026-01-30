@@ -12,6 +12,7 @@ use iota_types::{
     signature::GenericSignature,
     transaction::{TransactionData, TransactionDataAPI, TransactionDataV1, TransactionKind},
 };
+use move_core_types::account_address::AccountAddress;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -608,7 +609,7 @@ fn get_move_call_package_addresses(transaction_data: &TransactionData) -> Vec<Io
     data_v1
         .move_calls()
         .iter()
-        .map(|call| IotaAddress::new(call.0.into_bytes()))
+        .map(|call| IotaAddress::from(AccountAddress::new(call.0.into_bytes())))
         .collect()
 }
 
@@ -625,6 +626,7 @@ mod test {
             TransactionDataV1, TransactionExpiration, TransactionKind,
         },
     };
+    use move_core_types::account_address::AccountAddress;
 
     use crate::{
         access_controller::{
@@ -639,8 +641,8 @@ mod test {
 
     #[tokio::test]
     async fn test_constraint_sender_address() {
-        let matched_sender = IotaAddress::new([0; 32]);
-        let unmatched_sender = IotaAddress::new([1; 32]);
+        let matched_sender = IotaAddress::from(AccountAddress::new([0; 32]));
+        let unmatched_sender = IotaAddress::from(AccountAddress::new([1; 32]));
 
         let matched_data = TransactionContext::default().with_sender_address(matched_sender);
         let unmatched_data = TransactionContext::default().with_sender_address(unmatched_sender);
@@ -670,8 +672,8 @@ mod test {
 
     #[tokio::test]
     async fn test_constraint_move_call_package_addr() {
-        let matched_package_id = IotaAddress::new([1; 32]);
-        let unmatch_package_id = IotaAddress::new([2; 32]);
+        let matched_package_id = IotaAddress::from(AccountAddress::new([1; 32]));
+        let unmatch_package_id = IotaAddress::from(AccountAddress::new([2; 32]));
 
         let rule = AccessRuleBuilder::new()
             .move_call_package_address(matched_package_id)
@@ -688,8 +690,8 @@ mod test {
 
     #[tokio::test]
     async fn test_constraint_mix_ups_sender_budget_package_address() {
-        let sender_address = IotaAddress::new([1; 32]);
-        let move_call_package_address = IotaAddress::new([2; 32]);
+        let sender_address = IotaAddress::from(AccountAddress::new([1; 32]));
+        let move_call_package_address = IotaAddress::from(AccountAddress::new([2; 32]));
         let gas_limit = 100;
 
         let rule = AccessRuleBuilder::new()
@@ -709,7 +711,7 @@ mod test {
         let unmatched_data_package_address = TransactionContext::default()
             .with_sender_address(sender_address)
             .with_gas_budget(gas_limit)
-            .with_move_call_package_addresses(vec![IotaAddress::new([3; 32])]);
+            .with_move_call_package_addresses(vec![IotaAddress::from(AccountAddress::new([3; 32]))]);
 
         assert!(
             !rule
@@ -762,8 +764,8 @@ mod test {
 
     #[tokio::test]
     async fn test_constraint_mix_ups_sender_package_address() {
-        let sender_address = IotaAddress::new([1; 32]);
-        let move_call_package_address = IotaAddress::new([2; 32]);
+        let sender_address = IotaAddress::from(AccountAddress::new([1; 32]));
+        let move_call_package_address = IotaAddress::from(AccountAddress::new([2; 32]));
 
         let rule = AccessRuleBuilder::new()
             .sender_address(sender_address)
@@ -779,7 +781,7 @@ mod test {
 
         let unmatched_data = TransactionContext::default()
             .with_sender_address(sender_address)
-            .with_move_call_package_addresses(vec![IotaAddress::new([3; 32])]);
+            .with_move_call_package_addresses(vec![IotaAddress::from(AccountAddress::new([3; 32]))]);
 
         assert!(!rule.matches(&unmatched_data).await.unwrap().is_matched);
     }
@@ -863,7 +865,7 @@ mod test {
                 budget: 0,
                 price: 0,
             },
-            sender: IotaAddress::new([0x12; 32]),
+            sender: IotaAddress::from(AccountAddress::new([0x12; 32])),
         });
         let location = Location::new_memory(rego_content, "data.test.allow_sender");
         let mut source = SourceWithData::new(location.clone());
@@ -880,7 +882,7 @@ mod test {
         assert!(rule.matches(&matched_data).await.unwrap().is_matched);
 
         // Test with unmatched sender address
-        *transaction_data.sender_mut_for_testing() = IotaAddress::new([0x13; 32]);
+        *transaction_data.sender_mut_for_testing() = IotaAddress::from(AccountAddress::new([0x13; 32]));
         let unmatched_data = TransactionContext::default()
             .with_transaction_data(serde_json::to_value(&transaction_data).unwrap());
         assert!(
