@@ -80,8 +80,8 @@ url = { version = "2.5.7", features = ["serde"] }
 indoc = "2"
 rand = "0.8.5"
 wiremock = "0.6.3"
-iota-swarm-config = { git = "https://github.com/iotaledger/iota", rev = "066018d705bd3a1e29d5e9634a80adf693439587", package = "iota-swarm-config" }
-test-cluster = { git = "https://github.com/iotaledger/iota", rev = "066018d705bd3a1e29d5e9634a80adf693439587", package = "test-cluster" }
+iota-swarm-config = { git = "https://github.com/iotaledger/iota", rev = "63af87fdf21d88d6b4e5e150ec263b70732dc5ec", package = "iota-swarm-config" }
+test-cluster = { git = "https://github.com/iotaledger/iota", rev = "63af87fdf21d88d6b4e5e150ec263b70732dc5ec", package = "test-cluster" }
 http = "1"
 
 # Patch fastcrypto to the same version the monorepo pins in its own

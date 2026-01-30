@@ -34,10 +34,10 @@ pub const DEFAULT_INIT_COIN_BALANCE: u64 = NANOS_PER_IOTA / 10;
 const DEFAULT_COIN_POOL_REFRESH_INTERVAL_SEC: u64 = 60 * 60 * 24;
 // 1500 IOTA.
 pub const DEFAULT_DAILY_GAS_USAGE_CAP: u64 = 1500 * NANOS_PER_IOTA;
-// 2 IOTA.
-pub const DEFAULT_MAX_GAS_BUDGET: u64 = 2 * NANOS_PER_IOTA;
 // 10 seconds.
 pub const DEFAULT_CHECKPOINT_INCLUSION_TIMEOUT_MS: u64 = 10_000;
+pub const DEFAULT_MAX_GAS_BUDGET: u64 = 25 * NANOS_PER_IOTA;
+>>>>>>> 6921118 (feat: increase hardcoded gas budget to 25 IOTA)
 
 // Use 127.0.0.1 for tests to avoid OS complaining about permissions.
 #[cfg(test)]
