@@ -6,13 +6,14 @@ use fastcrypto::encoding::Base64;
 use iota_json_rpc_types::{IotaObjectRef, IotaTransactionBlockEffects};
 use iota_types::{
     base_types::{IotaAddress, ObjectRef},
+    gas_coin::NANOS_PER_IOTA,
     quorum_driver_types::ExecuteTransactionRequestType as IotaExecuteTransactionRequestType,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 // 2 IOTA.
-pub const MAX_BUDGET: u64 = 2_000_000_000;
+pub const MAX_BUDGET: u64 = NANOS_PER_IOTA * 25;
 
 // 10 mins.
 pub const MAX_DURATION_S: u64 = 10 * 60;
