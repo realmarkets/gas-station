@@ -102,6 +102,7 @@ coin-init-config:
   target-init-balance: 100000000 # requires redis to be cleared
   refresh-interval-sec: 86400
 daily-gas-usage-cap: 1500000000000
+max-gas-budget: 2000000000
 access-controller:
   access-policy: disabled
 ```
@@ -119,10 +120,13 @@ access-controller:
 | `coin-init-config.target-init-balance`  | yes ⚠               | Target balance for the new coins when we splitting new gas coins in NANOs | `100000000`                                                                                     |
 | `coin-init-config.refresh-interval-sec` | no                  | Interval in seconds to refresh balance and check for new coins to split   | `86400`                                                                                         |
 | `daily-gas-usage-cap`                   | no                  | Maximum allowed daily gas usage                                           | `1500000000000`                                                                                 |
+| `max-gas-budget`                        | no                  | Maximum allowed reservable gas budget                                     | `2000000000`                                                                                    |
 | `access-controller.access-policy`       | no                  | Access policy mode.                                                       | `disabled`, `allow-all`, `deny-all`. See [this link](./docs/access-controller.md) to learn more |
 
-> [!WARNING]
-> **Important:** Some configuration parameters require the Redis database to be cleared (flushed) before changes can take effect safely. Modifying these settings without resetting the database may result in inconsistencies or corruption of the gas coin registry. **Always flush the Redis database prior to changing such parameters and restart the service to avoid issues.**
+
+#### Gas Station reinitialization
+
+The configuration parameter `target-init-balance` requires the Redis database to be cleared (flushed) before any changes to those settings can take effect safely. If you modify these parameters, you will typically be notified that a reinitialization is required. To prevent accidental or unintended reinitializations — which may take a significant amount of time — you must explicitly start the gas station with the `--allow-reinit` flag to allow automatic reinitialization. Alternatively, you can revert the changed parameters to their original values and plan the reinitialization for a more convenient time.
 
 #### Signer Configuration
 

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::access_controller::AccessController;
-use crate::config::{CoinInitConfig, GasStationStorageConfig, DEFAULT_DAILY_GAS_USAGE_CAP};
+use crate::config::{
+    CoinInitConfig, GasStationStorageConfig, DEFAULT_DAILY_GAS_USAGE_CAP, DEFAULT_MAX_GAS_BUDGET,
+};
 use crate::gas_station::gas_station_core::GasStationContainer;
 use crate::gas_station::rescan_trigger::RescanGasObjectsTrigger;
 use crate::gas_station_initializer::GasStationInitializer;
@@ -56,6 +58,7 @@ pub async fn start_iota_cluster(init_gas_amounts: Vec<u64>) -> (TestCluster, Arc
 pub async fn start_gas_station(
     init_gas_amounts: Vec<u64>,
     target_init_coin_balance: u64,
+    max_gas_budget: Option<u64>,
 ) -> (TestCluster, GasStationContainer) {
     debug!("Starting Iota cluster..");
     let (test_cluster, signer) = start_iota_cluster(init_gas_amounts).await;
@@ -75,6 +78,8 @@ pub async fn start_gas_station(
         },
         signer.clone(),
         rescan_trigger_receiver,
+        false,
+        false,
     )
     .await;
     let station = GasStationContainer::new(
@@ -82,6 +87,7 @@ pub async fn start_gas_station(
         storage,
         iota_client,
         DEFAULT_DAILY_GAS_USAGE_CAP,
+        max_gas_budget.unwrap_or(DEFAULT_MAX_GAS_BUDGET),
         GasStationCoreMetrics::new_for_testing(),
         rescan_config,
     )
@@ -93,7 +99,8 @@ pub async fn start_rpc_server_for_testing(
     init_gas_amounts: Vec<u64>,
     target_init_balance: u64,
 ) -> (TestCluster, GasStationContainer, GasStationServer) {
-    let (test_cluster, container) = start_gas_station(init_gas_amounts, target_init_balance).await;
+    let (test_cluster, container) =
+        start_gas_station(init_gas_amounts, target_init_balance, None).await;
     let localhost = localhost_for_testing();
     let signer_address = container.get_signer_address();
     std::env::set_var(AUTH_ENV_NAME, "some secret");
@@ -115,7 +122,8 @@ pub async fn start_rpc_server_for_testing_no_auth(
     init_gas_amounts: Vec<u64>,
     target_init_balance: u64,
 ) -> (TestCluster, GasStationContainer, GasStationServer) {
-    let (test_cluster, container) = start_gas_station(init_gas_amounts, target_init_balance).await;
+    let (test_cluster, container) =
+        start_gas_station(init_gas_amounts, target_init_balance, None).await;
     let localhost = localhost_for_testing();
     let signer_address = container.get_signer_address();
 
@@ -136,7 +144,8 @@ pub async fn start_rpc_server_for_testing_empty_auth(
     init_gas_amounts: Vec<u64>,
     target_init_balance: u64,
 ) -> (TestCluster, GasStationContainer, GasStationServer) {
-    let (test_cluster, container) = start_gas_station(init_gas_amounts, target_init_balance).await;
+    let (test_cluster, container) =
+        start_gas_station(init_gas_amounts, target_init_balance, None).await;
     let localhost = localhost_for_testing();
     let signer_address = container.get_signer_address();
     std::env::set_var(AUTH_ENV_NAME, "");
@@ -159,7 +168,8 @@ pub async fn start_rpc_server_for_testing_with_access_controller(
     target_init_balance: u64,
     access_controller: AccessController,
 ) -> (TestCluster, GasStationContainer, GasStationServer) {
-    let (test_cluster, container) = start_gas_station(init_gas_amounts, target_init_balance).await;
+    let (test_cluster, container) =
+        start_gas_station(init_gas_amounts, target_init_balance, None).await;
     let localhost = localhost_for_testing();
     let signer_address = container.get_signer_address();
     std::env::set_var(AUTH_ENV_NAME, "some secret");
@@ -212,13 +222,16 @@ pub async fn create_test_transaction(
 
 pub async fn new_stats_tracker_for_testing(sponsor_address: IotaAddress) -> StatsTracker {
     StatsTracker::new(Arc::new(
-        connect_stats_storage(&GasStationStorageConfig::default(), sponsor_address).await,
+        connect_stats_storage(
+            &GasStationStorageConfig::default(),
+            sponsor_address.to_string().as_str(),
+        )
+        .await,
     ))
 }
 
 pub fn random_address() -> IotaAddress {
-    let random_bytes = rand::random::<[u8; 32]>();
-    IotaAddress::new(random_bytes)
+    IotaAddress::random_for_testing_only()
 }
 
 struct MockedStatsTrackerStorage;
