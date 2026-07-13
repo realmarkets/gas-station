@@ -6,11 +6,11 @@ use std::collections::BTreeMap;
 use anyhow::Context;
 use axum::http::HeaderMap;
 use fastcrypto::encoding::Base64;
+use iota_sdk_types::{Address as IotaAddress, TransactionKind};
 use iota_types::{
-    base_types::IotaAddress,
     digests::TransactionDigest,
     signature::GenericSignature,
-    transaction::{TransactionData, TransactionDataAPI, TransactionDataV1, TransactionKind},
+    transaction::{TransactionData, TransactionDataAPI, TransactionDataV1},
 };
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -489,7 +489,7 @@ pub struct TransactionContext {
 impl Default for TransactionContext {
     fn default() -> Self {
         Self {
-            sender_address: IotaAddress::default(),
+            sender_address: IotaAddress::ZERO,
             transaction_budget: 0,
             move_call_package_addresses: vec![],
             ptb_command_count: None,
@@ -520,10 +520,10 @@ impl TransactionContext {
     ) -> Self {
         let ptb_command_count = match transaction_data {
             TransactionData::V1(TransactionDataV1 {
-                kind: TransactionKind::ProgrammableTransaction(pt),
+                kind: TransactionKind::Programmable(pt),
                 ..
             }) => Some(pt.commands.len()),
-            TransactionData::V1(TransactionDataV1 { kind: _, .. }) => None,
+            _ => None,
         };
         // TODO handle the error properly
         let transaction_value = serde_json::to_value(&transaction_data)
@@ -604,8 +604,7 @@ impl TransactionContext {
 }
 
 fn get_move_call_package_addresses(transaction_data: &TransactionData) -> Vec<IotaAddress> {
-    let TransactionData::V1(data_v1) = transaction_data;
-    data_v1
+    transaction_data
         .move_calls()
         .iter()
         .map(|call| call.0.clone().into())
@@ -618,13 +617,10 @@ mod test {
     use std::{str::FromStr, vec};
 
     use axum::http::{HeaderMap, HeaderName, HeaderValue};
-    use iota_types::{
-        base_types::IotaAddress,
-        transaction::{
-            GasData, ProgrammableTransaction, TransactionData, TransactionDataAPI,
-            TransactionDataV1, TransactionExpiration, TransactionKind,
-        },
+    use iota_sdk_types::{
+        Address as IotaAddress, ProgrammableTransaction, TransactionExpiration, TransactionKind,
     };
+    use iota_types::transaction::{GasData, TransactionData, TransactionDataAPI, TransactionDataV1};
 
     use crate::{
         access_controller::{
@@ -852,14 +848,14 @@ mod test {
             }
         "#;
         let mut transaction_data = TransactionData::V1(TransactionDataV1 {
-            kind: TransactionKind::ProgrammableTransaction(ProgrammableTransaction {
+            kind: TransactionKind::Programmable(ProgrammableTransaction {
                 commands: vec![],
                 inputs: vec![],
             }),
             expiration: TransactionExpiration::None,
-            gas_data: GasData {
-                payment: vec![],
-                owner: IotaAddress::default(),
+            gas_payment: GasData {
+                objects: vec![],
+                owner: IotaAddress::ZERO,
                 budget: 0,
                 price: 0,
             },

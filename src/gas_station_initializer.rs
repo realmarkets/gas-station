@@ -11,11 +11,11 @@ use crate::tx_signer::TxSigner;
 use crate::types::GasCoin;
 use anyhow::bail;
 use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
-use iota_types::base_types::IotaAddress;
-use iota_types::coin::{PAY_MODULE_NAME, PAY_SPLIT_N_FUNC_NAME};
+use iota_sdk_types::{Address as IotaAddress, Argument, Identifier};
+use iota_types::coin::PAY_SPLIT_N_FUNC_NAME;
 use iota_types::gas_coin::GAS;
 use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::transaction::{Argument, Transaction, TransactionData};
+use iota_types::transaction::{Transaction, TransactionData, TransactionDataAPI};
 use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
 use parking_lot::Mutex;
 use std::cmp::min;
@@ -92,10 +92,10 @@ impl CoinSplitEnv {
             let pure_arg = pt_builder.pure(split_count).unwrap();
             pt_builder.programmable_move_call(
                 IOTA_FRAMEWORK_PACKAGE_ID,
-                PAY_MODULE_NAME.into(),
-                PAY_SPLIT_N_FUNC_NAME.into(),
+                Identifier::from_static("pay"),
+                PAY_SPLIT_N_FUNC_NAME,
                 vec![GAS::type_tag()],
-                vec![Argument::GasCoin, pure_arg],
+                vec![Argument::Gas, pure_arg],
             );
             let pt = pt_builder.finish();
             let tx_data = TransactionData::new_programmable(
@@ -135,7 +135,7 @@ impl CoinSplitEnv {
                     error!("Failed to execute transaction: {:?}", e);
                     coin = self
                         .iota_client
-                        .get_latest_gas_objects([coin.object_ref.0])
+                        .get_latest_gas_objects([coin.object_ref.object_id])
                         .await
                         .into_iter()
                         .next()
@@ -150,14 +150,14 @@ impl CoinSplitEnv {
         let new_coin_balance = (coin.balance - budget) / split_count;
         for created in effects.created() {
             result.extend(self.enqueue_task(GasCoin {
-                object_ref: created.reference.to_object_ref(),
+                object_ref: created.reference,
                 balance: new_coin_balance,
             }));
         }
         let remaining_coin_balance = (coin.balance - new_coin_balance * (split_count - 1)) as i64
             - effects.gas_cost_summary().net_gas_usage();
         result.extend(self.enqueue_task(GasCoin {
-            object_ref: effects.gas_object().reference.to_object_ref(),
+            object_ref: effects.gas_object().reference,
             balance: remaining_coin_balance as u64,
         }));
         self.increment_total_coin_count_by(result.len() - 1);

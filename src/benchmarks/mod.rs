@@ -9,8 +9,9 @@ use iota_config::node::DEFAULT_VALIDATOR_GAS_PRICE;
 use iota_sdk_types::Intent;
 use iota_sdk_types::IntentMessage;
 use iota_types::crypto::{get_account_key_pair, Signature};
+use iota_sdk_types::TransactionKind;
 use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::transaction::{TransactionData, TransactionKind};
+use iota_types::transaction::{TransactionData, TransactionDataAPI};
 use parking_lot::RwLock;
 use rand::rngs::OsRng;
 use rand::Rng;
@@ -79,7 +80,7 @@ impl BenchmarkMode {
                     let pt_builder = ProgrammableTransactionBuilder::new();
                     let pt = pt_builder.finish();
                     let tx_data = TransactionData::new_with_gas_coins_allow_sponsor(
-                        TransactionKind::ProgrammableTransaction(pt),
+                        TransactionKind::Programmable(pt),
                         sender,
                         gas_coins,
                         budget,

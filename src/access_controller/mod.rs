@@ -211,7 +211,7 @@ mod test {
     use std::collections::BTreeMap;
 
     use indoc::indoc;
-    use iota_types::base_types::IotaAddress;
+    use iota_sdk_types::Address as IotaAddress;
     use url::Url;
 
     use crate::access_controller::{

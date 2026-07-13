@@ -209,7 +209,8 @@ mod tests {
     // Its important to use original encoding to ensure that the BCS decoder works correctly.
     const TRANSACTION_KIND_JSON: &str = include_str!("./../test_files/transaction_kind.json");
 
-    use iota_types::transaction::{CallArg, TransactionKind};
+    use iota_sdk_types::TransactionKind;
+    use iota_types::transaction::CallArg;
 
     use super::*;
     use std::collections::HashMap;
@@ -217,7 +218,7 @@ mod tests {
         let tx_kind = serde_json::from_str::<TransactionKind>(TRANSACTION_KIND_JSON)
             .expect("Failed to parse transaction kind JSON");
 
-        let TransactionKind::ProgrammableTransaction(ptb) = tx_kind else {
+        let TransactionKind::Programmable(ptb) = tx_kind else {
             panic!("Expected a ProgrammableTransaction kind");
         };
         let inputs_bytes: Vec<Vec<u8>> = ptb

@@ -26,7 +26,6 @@ use axum::{Extension, Json, Router, TypedHeader};
 use fastcrypto::encoding::Base64;
 use iota_config::Config;
 use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
-use iota_types::crypto::ToFromBytes;
 use iota_types::signature::GenericSignature;
 use iota_types::transaction::TransactionData;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};

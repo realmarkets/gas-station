@@ -13,13 +13,15 @@ use iota_json_rpc_types::{
     IotaTransactionBlockResponseOptions,
 };
 use iota_sdk::IotaClientBuilder;
-use iota_types::base_types::{IotaAddress, ObjectID, ObjectRef};
-use iota_types::coin::{PAY_MODULE_NAME, PAY_SPLIT_N_FUNC_NAME};
+use iota_sdk_types::{
+    Address as IotaAddress, Argument, Identifier, ObjectId as ObjectID, ProgrammableTransaction,
+    TransactionKind,
+};
+use iota_types::base_types::ObjectRef;
+use iota_types::coin::PAY_SPLIT_N_FUNC_NAME;
 use iota_types::gas_coin::GAS;
 use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::transaction::{
-    Argument, ObjectArg, ProgrammableTransaction, Transaction, TransactionKind,
-};
+use iota_types::transaction::{CallArg, Transaction};
 use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
 use itertools::Itertools;
 use std::collections::HashMap;
@@ -192,8 +194,8 @@ impl IotaClient {
         let pure_arg = pt_builder.pure(split_count).unwrap();
         pt_builder.programmable_move_call(
             IOTA_FRAMEWORK_PACKAGE_ID,
-            PAY_MODULE_NAME.into(),
-            PAY_SPLIT_N_FUNC_NAME.into(),
+            Identifier::from_static("pay"),
+            PAY_SPLIT_N_FUNC_NAME,
             vec![GAS::type_tag()],
             vec![gas_coin, pure_arg],
         );
@@ -208,13 +210,13 @@ impl IotaClient {
         const SPLIT_COUNT: u64 = 500;
         let mut pt_builder = ProgrammableTransactionBuilder::new();
         let object_arg = pt_builder
-            .obj(ObjectArg::ImmOrOwnedObject(gas_coin.object_ref))
+            .obj(CallArg::ImmutableOrOwned(gas_coin.object_ref))
             .unwrap();
         let pure_arg = pt_builder.pure(SPLIT_COUNT).unwrap();
         pt_builder.programmable_move_call(
             IOTA_FRAMEWORK_PACKAGE_ID,
-            PAY_MODULE_NAME.into(),
-            PAY_SPLIT_N_FUNC_NAME.into(),
+            Identifier::from_static("pay"),
+            PAY_SPLIT_N_FUNC_NAME,
             vec![GAS::type_tag()],
             vec![object_arg, pure_arg],
         );
@@ -224,7 +226,7 @@ impl IotaClient {
                 .read_api()
                 .dev_inspect_transaction_block(
                     sponsor_address,
-                    TransactionKind::ProgrammableTransaction(pt.clone()),
+                    TransactionKind::Programmable(pt.clone()),
                     None,
                     None,
                     None,
@@ -273,13 +275,13 @@ impl IotaClient {
             let response = self
                 .iota_client
                 .read_api()
-                .get_object_with_options(obj_ref.0, IotaObjectDataOptions::default())
+                .get_object_with_options(obj_ref.object_id, IotaObjectDataOptions::default())
                 .await;
             if let Ok(IotaObjectResponse {
                 data: Some(data), ..
             }) = response
             {
-                if data.version == obj_ref.1 {
+                if data.version == obj_ref.version {
                     break;
                 }
             }
@@ -291,7 +293,7 @@ impl IotaClient {
         let data = object.data.as_ref()?;
         let object_ref = data.object_ref();
         let move_obj = data.bcs.as_ref()?.try_as_move()?;
-        if move_obj.type_ != iota_types::gas_coin::GasCoin::type_() {
+        if !move_obj.type_.is_gas_coin() {
             return None;
         }
         let gas_coin: iota_types::gas_coin::GasCoin = bcs::from_bytes(&move_obj.bcs_bytes).ok()?;

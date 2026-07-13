@@ -3,13 +3,16 @@
 
 use crate::types::ReservationID;
 use fastcrypto::encoding::Base64;
-use iota_json_rpc_types::{IotaObjectRef, IotaTransactionBlockEffects};
+use iota_json_rpc_types::iota_primitives::Address as AddressSchema;
+use iota_json_rpc_types::{IotaTransactionBlockEffects, ObjectRefSchema};
+use iota_sdk_types::Address as IotaAddress;
 use iota_types::{
-    base_types::{IotaAddress, ObjectRef},
+    base_types::ObjectRef,
     quorum_driver_types::ExecuteTransactionRequestType as IotaExecuteTransactionRequestType,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 
 #[derive(Clone, Debug, JsonSchema, Serialize, Deserialize)]
 pub struct ReserveGasRequest {
@@ -23,11 +26,16 @@ pub struct ReserveGasResponse {
     pub error: Option<String>,
 }
 
+#[serde_as]
 #[derive(Debug, JsonSchema, Serialize, Deserialize)]
 pub struct ReserveGasResult {
+    #[serde_as(as = "AddressSchema")]
+    #[schemars(with = "AddressSchema")]
     pub sponsor_address: IotaAddress,
     pub reservation_id: ReservationID,
-    pub gas_coins: Vec<IotaObjectRef>,
+    #[serde_as(as = "Vec<ObjectRefSchema>")]
+    #[schemars(with = "Vec<ObjectRefSchema>")]
+    pub gas_coins: Vec<ObjectRef>,
 }
 
 impl ReserveGasResponse {
@@ -40,7 +48,7 @@ impl ReserveGasResponse {
             result: Some(ReserveGasResult {
                 sponsor_address,
                 reservation_id,
-                gas_coins: gas_coins.into_iter().map(|c| c.into()).collect(),
+                gas_coins,
             }),
             error: None,
         }

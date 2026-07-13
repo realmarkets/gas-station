@@ -12,13 +12,12 @@ use crate::types::{GasCoin, ReservationID};
 use crate::{retry_forever, retry_with_max_attempts};
 use anyhow::bail;
 use iota_json_rpc_types::{IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI};
-use iota_types::base_types::{IotaAddress, ObjectID, ObjectRef};
+use iota_sdk_types::{Address as IotaAddress, Argument, Command, ObjectId as ObjectID, TransactionKind};
+use iota_types::base_types::ObjectRef;
 use iota_types::gas_coin::NANOS_PER_IOTA;
 use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
 use iota_types::signature::GenericSignature;
-use iota_types::transaction::{
-    Argument, Command, Transaction, TransactionData, TransactionDataAPI, TransactionKind,
-};
+use iota_types::transaction::{Transaction, TransactionData, TransactionDataAPI, TransactionKindExt};
 use std::cmp::min;
 use std::sync::Arc;
 use std::time::Duration;
@@ -111,9 +110,9 @@ impl GasStation {
         Self::check_transaction_validity(&tx_data)?;
         let payment: Vec<_> = tx_data
             .gas_data()
-            .payment
+            .objects
             .iter()
-            .map(|oref| oref.0)
+            .map(|oref| oref.object_id)
             .collect();
         let payment_count = payment.len();
         debug!(
@@ -139,7 +138,7 @@ impl GasStation {
             .await;
         let updated_coins = match &response {
             Ok(effects) => {
-                let new_gas_coin = effects.gas_object().reference.to_object_ref();
+                let new_gas_coin = effects.gas_object().reference;
                 let new_balance =
                     total_gas_coin_balance as i64 - effects.gas_cost_summary().net_gas_usage();
                 debug!(
@@ -307,26 +306,27 @@ impl GasStation {
                 Command::MoveCall(call) => {
                     all_args.extend(call.arguments.iter());
                 }
-                Command::TransferObjects(args, _) => {
-                    all_args.extend(args.iter());
+                Command::TransferObjects(transfer) => {
+                    all_args.extend(transfer.objects.iter());
                 }
-                Command::SplitCoins(arg, _) => {
-                    all_args.push(arg);
+                Command::SplitCoins(split) => {
+                    all_args.push(&split.coin);
                 }
-                Command::MergeCoins(arg, args) => {
-                    all_args.push(arg);
-                    all_args.extend(args.iter());
+                Command::MergeCoins(merge) => {
+                    all_args.push(&merge.coin);
+                    all_args.extend(merge.coins_to_merge.iter());
                 }
-                Command::Publish(_, _) => {}
-                Command::MakeMoveVec(_, args) => {
-                    all_args.extend(args.iter());
+                Command::Publish(_) => {}
+                Command::MakeMoveVector(make) => {
+                    all_args.extend(make.elements.iter());
                 }
-                Command::Upgrade(_, _, _, _) => {}
+                Command::Upgrade(_) => {}
+                _ => {}
             };
         }
         let uses_gas = all_args
             .into_iter()
-            .any(|arg| matches!(*arg, Argument::GasCoin));
+            .any(|arg| matches!(*arg, Argument::Gas));
         if uses_gas {
             bail!("Gas coin can only be used to pay gas")
         };
@@ -350,13 +350,12 @@ impl GasStation {
         let gas_budget = NANOS_PER_IOTA / 10;
         let (_address, _reservation_id, gas_coins) =
             self.reserve_gas(gas_budget, Duration::from_secs(3)).await?;
-        let tx_kind = TransactionKind::ProgrammableTransaction(
-            ProgrammableTransactionBuilder::new().finish(),
-        );
+        let tx_kind =
+            TransactionKind::Programmable(ProgrammableTransactionBuilder::new().finish());
         // Since we just want to check the health of the signer, we don't need to actually execute the transaction.
         let tx_data = TransactionData::new_with_gas_coins(
             tx_kind,
-            IotaAddress::default(),
+            IotaAddress::ZERO,
             gas_coins,
             gas_budget,
             0,

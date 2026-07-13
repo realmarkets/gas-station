@@ -11,11 +11,12 @@ mod tests {
     use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
     use iota_sdk_types::Intent;
     use iota_sdk_types::IntentMessage;
+    use iota_sdk_types::TransactionKind;
     use iota_types::{
         crypto::{get_account_key_pair, Signature},
         gas_coin::NANOS_PER_IOTA,
         programmable_transaction_builder::ProgrammableTransactionBuilder,
-        transaction::{TransactionData, TransactionKind},
+        transaction::{TransactionData, TransactionDataAPI},
     };
     use std::time::Duration;
 
@@ -84,7 +85,8 @@ mod tests {
             .await
             .unwrap();
         let (sender, keypair) = get_account_key_pair();
-        let tx_kind = TransactionKind::programmable(ProgrammableTransactionBuilder::new().finish());
+        let tx_kind =
+            TransactionKind::Programmable(ProgrammableTransactionBuilder::new().finish());
         let tx_data = TransactionData::new_with_gas_coins_allow_sponsor(
             tx_kind, sender, gas_coins, 1, 1, sponsor,
         );

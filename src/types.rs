@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::bail;
-use iota_json_rpc_types::IotaObjectRef;
-use iota_types::base_types::{ObjectID, ObjectRef};
+use iota_json_rpc_types::ObjectRefSchema;
+use iota_sdk_types::ObjectId as ObjectID;
+use iota_types::base_types::ObjectRef;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -14,16 +16,19 @@ pub struct GasCoin {
     pub balance: u64,
 }
 
+#[serde_as]
 #[derive(Debug, JsonSchema, Serialize, Deserialize)]
 pub struct IotaGasCoin {
-    pub object_ref: IotaObjectRef,
+    #[serde_as(as = "ObjectRefSchema")]
+    #[schemars(with = "ObjectRefSchema")]
+    pub object_ref: ObjectRef,
     pub balance: u64,
 }
 
 impl From<GasCoin> for IotaGasCoin {
     fn from(gas_coin: GasCoin) -> Self {
         Self {
-            object_ref: gas_coin.object_ref.into(),
+            object_ref: gas_coin.object_ref,
             balance: gas_coin.balance,
         }
     }
@@ -32,7 +37,7 @@ impl From<GasCoin> for IotaGasCoin {
 impl From<IotaGasCoin> for GasCoin {
     fn from(gas_coin: IotaGasCoin) -> Self {
         Self {
-            object_ref: gas_coin.object_ref.to_object_ref(),
+            object_ref: gas_coin.object_ref,
             balance: gas_coin.balance,
         }
     }
@@ -59,7 +64,7 @@ impl UpdatedGasGroup {
         let all_ids: BTreeSet<_> = self
             .updated_gas_coins
             .iter()
-            .map(|coin| &coin.object_ref.0)
+            .map(|coin| &coin.object_ref.object_id)
             .chain(&self.deleted_gas_coins)
             .collect();
         if all_ids.is_empty() {

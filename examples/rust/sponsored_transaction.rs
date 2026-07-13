@@ -40,7 +40,7 @@ async fn main() {
         iota_config::iota_config_dir().unwrap().to_str().unwrap(),
         IOTA_CLIENT_CONFIG
     );
-    let wallet_context = WalletContext::new(&Path::new(&config_path), None, None).unwrap();
+    let wallet_context = WalletContext::new(&Path::new(&config_path)).unwrap();
 
     // Get the first gas object owned by the address
     let user = wallet_context.active_address().unwrap();
@@ -60,7 +60,7 @@ async fn main() {
     // TransactionKind is an type that doesn't have information about gas and sender.
     let tx_kind = iota_client
         .transaction_builder()
-        .transfer_object_tx_kind(object.0, user)
+        .transfer_object_tx_kind(object.object_id, user)
         .await
         .unwrap();
 
@@ -68,7 +68,7 @@ async fn main() {
     // TransactionData is unsigned version of Transaction. The maximum gas budget is 0.01 IOTA.
     let mut tx_data = TransactionData::new(tx_kind, user, gas_coins[0], 3000000, ref_gas_price);
     // Set the gas object and gas-station sponsor account fetched from the gas station
-    tx_data.gas_data_mut().payment = gas_coins;
+    tx_data.gas_data_mut().objects = gas_coins;
     tx_data.gas_data_mut().owner = sponsor_account;
 
     // Sign the TransactionData with the wallet.

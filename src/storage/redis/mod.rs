@@ -10,7 +10,8 @@ use crate::storage::{SetGetStorage, Storage, MAINTENANCE_MODE_ERROR_MESSAGE};
 use crate::types::{GasCoin, ReservationID};
 use anyhow::bail;
 use chrono::Utc;
-use iota_types::base_types::{IotaAddress, ObjectDigest, ObjectID, SequenceNumber};
+use iota_sdk_types::{Address as IotaAddress, ObjectId as ObjectID};
+use iota_types::base_types::{ObjectDigest, ObjectRef, SequenceNumber};
 use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
 use std::ops::Add;
@@ -139,11 +140,12 @@ impl Storage for RedisStorage {
                 let mut splits = s.split(',');
                 let balance = splits.next().unwrap().parse::<u64>().unwrap();
                 let object_id = ObjectID::from_str(splits.next().unwrap()).unwrap();
-                let version = SequenceNumber::from(splits.next().unwrap().parse::<u64>().unwrap());
+                let version =
+                    SequenceNumber::from_u64(splits.next().unwrap().parse::<u64>().unwrap());
                 let digest = ObjectDigest::from_str(splits.next().unwrap()).unwrap();
                 GasCoin {
                     balance,
-                    object_ref: (object_id, version, digest),
+                    object_ref: ObjectRef::new(object_id, version, digest),
                 }
             })
             .collect();
@@ -187,9 +189,9 @@ impl Storage for RedisStorage {
                 format!(
                     "{},{},{},{}",
                     c.balance,
-                    c.object_ref.0,
-                    c.object_ref.1.value(),
-                    c.object_ref.2
+                    c.object_ref.object_id,
+                    c.object_ref.version.as_u64(),
+                    c.object_ref.digest
                 )
             })
             .collect::<Vec<String>>();
@@ -397,7 +399,8 @@ impl Storage for RedisStorage {
 }
 #[cfg(test)]
 mod tests {
-    use iota_types::base_types::{random_object_ref, IotaAddress};
+    use iota_sdk_types::Address as IotaAddress;
+    use iota_types::base_types::random_object_ref;
     use serde::{Deserialize, Serialize};
 
     use crate::{

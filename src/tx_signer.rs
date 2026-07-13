@@ -5,7 +5,7 @@ use anyhow::anyhow;
 use fastcrypto::encoding::{Base64, Encoding};
 use iota_sdk_types::Intent;
 use iota_sdk_types::IntentMessage;
-use iota_types::base_types::IotaAddress;
+use iota_sdk_types::Address as IotaAddress;
 use iota_types::crypto::{IotaKeyPair, Signature};
 use iota_types::signature::GenericSignature;
 use iota_types::transaction::TransactionData;

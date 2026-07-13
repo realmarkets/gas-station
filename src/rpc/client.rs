@@ -10,7 +10,8 @@ use crate::types::ReservationID;
 use anyhow::bail;
 use fastcrypto::encoding::Base64;
 use iota_json_rpc_types::IotaTransactionBlockEffects;
-use iota_types::base_types::{IotaAddress, ObjectRef};
+use iota_sdk_types::Address as IotaAddress;
+use iota_types::base_types::ObjectRef;
 use iota_types::signature::GenericSignature;
 use iota_types::transaction::TransactionData;
 use reqwest::header::{HeaderMap, AUTHORIZATION};
@@ -112,11 +113,7 @@ impl GasStationRpcClient {
                 (
                     result.sponsor_address,
                     result.reservation_id,
-                    result
-                        .gas_coins
-                        .into_iter()
-                        .map(|c| c.to_object_ref())
-                        .collect(),
+                    result.gas_coins,
                 )
             })
     }
@@ -136,7 +133,7 @@ impl GasStationRpcClient {
         let request = ExecuteTxRequest {
             reservation_id,
             tx_bytes: Base64::from_bytes(&bcs::to_bytes(&tx_data).unwrap()),
-            user_sig: Base64::from_bytes(user_sig.as_ref()),
+            user_sig: Base64::from_bytes(&user_sig.to_bytes()),
             request_type,
         };
         let response = self

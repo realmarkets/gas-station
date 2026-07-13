@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_metrics::histogram::Histogram;
-use prometheus::{
+use prometheus_filtered::{
     register_int_counter_vec_with_registry, register_int_counter_with_registry,
     register_int_gauge_vec_with_registry, IntCounter, IntCounterVec, IntGaugeVec, Registry,
 };

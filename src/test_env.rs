@@ -21,7 +21,8 @@ use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use iota_config::local_ip_utils::{get_available_port, localhost_for_testing};
 use iota_swarm_config::genesis_config::AccountConfig;
-use iota_types::base_types::{IotaAddress, ObjectRef};
+use iota_sdk_types::Address as IotaAddress;
+use iota_types::base_types::ObjectRef;
 use iota_types::crypto::get_account_key_pair;
 use iota_types::gas_coin::NANOS_PER_IOTA;
 use iota_types::signature::GenericSignature;
@@ -209,7 +210,7 @@ pub async fn create_test_transaction(
         .transfer(object, user)
         .build();
     // TODO: Add proper sponsored transaction support to test tx builder.
-    tx_data.gas_data_mut().payment = gas_coins;
+    tx_data.gas_data_mut().objects = gas_coins;
     tx_data.gas_data_mut().owner = sponsor;
     let user_sig = test_cluster
         .sign_transaction(&tx_data)
@@ -231,7 +232,7 @@ pub async fn new_stats_tracker_for_testing(sponsor_address: IotaAddress) -> Stat
 }
 
 pub fn random_address() -> IotaAddress {
-    IotaAddress::random_for_testing_only()
+    IotaAddress::random()
 }
 
 struct MockedStatsTrackerStorage;

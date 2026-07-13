@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::fmt;
+use std::str::FromStr;
 
-use fastcrypto::encoding::decode_bytes_hex;
-use iota_types::base_types::IotaAddress;
+use iota_sdk_types::Address as IotaAddress;
 use serde::{
     de::{self, Visitor},
     Deserialize, Serialize,
@@ -78,7 +78,7 @@ impl<'de> Deserialize<'de> for ValueIotaAddress {
                 if value == "*" {
                     Ok(ValueIotaAddress::All)
                 } else {
-                    let from_hex: IotaAddress = decode_bytes_hex(value).map_err(E::custom)?;
+                    let from_hex = IotaAddress::from_str(value).map_err(E::custom)?;
                     Ok(ValueIotaAddress::Single(from_hex))
                 }
             }
@@ -108,7 +108,7 @@ where
 #[cfg(test)]
 mod test {
     use indoc::indoc;
-    use iota_types::base_types::IotaAddress;
+    use iota_sdk_types::Address as IotaAddress;
 
     use super::ValueIotaAddress;
 

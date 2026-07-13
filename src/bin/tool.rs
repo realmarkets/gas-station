@@ -8,7 +8,7 @@ use iota_gas_station::benchmarks::BenchmarkMode;
 use iota_gas_station::config::{GasStationConfig, GasStationStorageConfig, TxSignerConfig};
 use iota_gas_station::rpc::client::GasStationRpcClient;
 use iota_sdk::{IOTA_DEVNET_URL, IOTA_MAINNET_URL, IOTA_TESTNET_URL};
-use iota_types::base_types::IotaAddress;
+use iota_sdk_types::Address as IotaAddress;
 use iota_types::crypto::{get_account_key_pair, EncodeDecodeBase64, IotaKeyPair};
 use std::path::PathBuf;
 
