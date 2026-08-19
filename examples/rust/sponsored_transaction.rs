@@ -34,6 +34,7 @@
 
 use iota_sdk_crypto::ToFromBech32;
 use iota_sdk_crypto::ed25519::Ed25519PrivateKey;
+use iota_sdk_grpc_client::read_mask_fields::OwnedObjectReadMask;
 use iota_sdk_grpc_client::Client;
 use iota_sdk_transaction_builder::TransactionBuilder;
 use iota_sdk_types::StructTag;
@@ -67,7 +68,13 @@ async fn main() -> anyhow::Result<()> {
     // address" -- any object the sender owns would do here, a coin is just the simplest
     // one to look up.)
     let page = client
-        .list_owned_objects(sender, Some(StructTag::new_gas_coin()), Some(1), None, None)
+        .list_owned_objects(
+            sender,
+            Some(StructTag::new_gas_coin()),
+            Some(1),
+            None,
+            OwnedObjectReadMask::default(),
+        )
         .await?
         .into_inner();
     let coin_id = page

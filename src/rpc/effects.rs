@@ -426,10 +426,10 @@ fn shared_object_refs(v1: &TransactionEffectsV1) -> Vec<ObjectReference> {
                     *version,
                     ObjectDigest::OBJECT_DELETED,
                 )),
-                UnchangedSharedKind::Cancelled { version } => Some(ObjectReference::new(
+                UnchangedSharedKind::Canceled { version } => Some(ObjectReference::new(
                     unchanged.object_id,
                     *version,
-                    ObjectDigest::OBJECT_CANCELLED,
+                    ObjectDigest::OBJECT_CANCELED,
                 )),
                 // Per-epoch config objects don't require sequencing and are
                 // excluded from the shared-objects view.
@@ -887,11 +887,11 @@ mod tests {
 
     #[test]
     fn failure_status_randomness_unavailable() {
-        let error = ExecutionError::ExecutionCancelledDueToRandomnessUnavailable;
+        let error = ExecutionError::ExecutionCanceledDueToRandomnessUnavailable;
         let expected_message = error.to_string();
         assert_eq!(
             expected_message,
-            "Certificate is cancelled because randomness could not be generated this epoch"
+            "Certificate is canceled because randomness could not be generated this epoch"
         );
         let v1 = failure_effects_with(error);
 
@@ -905,7 +905,7 @@ mod tests {
 
     #[test]
     fn failure_status_congestion_v2_with_command_index() {
-        let error = ExecutionError::ExecutionCancelledDueToSharedObjectCongestionV2 {
+        let error = ExecutionError::ExecutionCanceledDueToSharedObjectCongestionV2 {
             congested_objects: vec![oid(210), oid(211)],
             suggested_gas_price: 12_345,
         };

@@ -44,6 +44,7 @@
 use iota_gas_station::gas_station::gas_station_core::NANOS_PER_IOTA;
 use iota_gas_station::rpc::client::GasStationRpcClient;
 use iota_sdk_crypto::{IotaSigner, ToFromBech32, ed25519::Ed25519PrivateKey};
+use iota_sdk_grpc_client::read_mask_fields::OwnedObjectReadMask;
 use iota_sdk_grpc_client::Client;
 use iota_sdk_transaction_builder::TransactionBuilder;
 use iota_sdk_types::StructTag;
@@ -78,7 +79,13 @@ async fn main() -> anyhow::Result<()> {
 
     // Get an object owned by the user to transfer -- to itself, purely as a demo payload.
     let page = client
-        .list_owned_objects(user, Some(StructTag::new_gas_coin()), Some(1), None, None)
+        .list_owned_objects(
+            user,
+            Some(StructTag::new_gas_coin()),
+            Some(1),
+            None,
+            OwnedObjectReadMask::default(),
+        )
         .await?
         .into_inner();
     let object_ref = page

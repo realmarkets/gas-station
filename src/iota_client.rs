@@ -8,13 +8,16 @@ use crate::rpc::rpc_types::ExecuteTransactionRequestType;
 use crate::types::GasCoin;
 use crate::{retry_forever, retry_with_max_attempts};
 use iota_sdk_grpc_client::api::Error as GrpcError;
-use iota_sdk_grpc_client::read_mask_fields::{SimulateExecutedTransactionField, TransactionField};
-use iota_sdk_grpc_client::{Client, HeadersInterceptor, ReadMask};
+use iota_sdk_grpc_client::read_mask_fields::{
+    ExecuteTransactionReadMask, ObjectReadMask, OwnedObjectReadMask, SimulateField,
+    TransactionField,
+};
+use iota_sdk_grpc_client::{Client, HeadersInterceptor};
 use iota_sdk_grpc_types::v1::object::Object;
 use iota_sdk_transaction_builder::TransactionBuilder;
 use iota_sdk_types::{
     Address, Coin, Identifier, Input, ObjectId, SignedTransaction, StructTag, TransactionEffects,
-    TypeTag, Version,
+    TypeTag,
 };
 use std::collections::HashMap;
 use std::time::Duration;
@@ -141,7 +144,7 @@ impl IotaClient {
                             Some(StructTag::new_gas_coin()),
                             Some(COIN_LIST_PAGE_SIZE),
                             cursor.clone(),
-                            None,
+                            OwnedObjectReadMask::default(),
                         )
                         .await
                 })
@@ -185,7 +188,7 @@ impl IotaClient {
                                 Some(StructTag::new_gas_coin()),
                                 Some(COIN_LIST_PAGE_SIZE),
                                 cursor.clone(),
-                                None,
+                                OwnedObjectReadMask::default(),
                             )
                             .await
                     })
@@ -246,9 +249,13 @@ impl IotaClient {
         chunk: &[ObjectId],
         result: &mut HashMap<ObjectId, Option<GasCoin>>,
     ) {
-        let refs: Vec<(ObjectId, Option<Version>)> = chunk.iter().map(|id| (*id, None)).collect();
         let outcome = retry_forever!(async {
-            attempt(async { self.client.get_objects(&refs, None).await }).await
+            attempt(async {
+                self.client
+                    .get_objects(chunk.iter().copied(), ObjectReadMask::default())
+                    .await
+            })
+            .await
         });
         let objects = into_anyhow(outcome)
             .unwrap_or_else(|err| panic!("failed to fetch gas objects: {err}"))
@@ -309,7 +316,7 @@ impl IotaClient {
                     .simulate_transaction(
                         tx.clone(),
                         true,
-                        Some(ReadMask::from(&[SimulateExecutedTransactionField::EFFECTS])),
+                        SimulateField::EXECUTED_TRANSACTION_EFFECTS,
                     )
                     .await
             })
@@ -355,7 +362,7 @@ impl IotaClient {
             };
         // Narrow read mask: this service only ever reads the digest (for
         // logging) and the effects.
-        let mask = ReadMask::from(&[
+        let mask = ExecuteTransactionReadMask::from([
             TransactionField::TRANSACTION_DIGEST,
             TransactionField::EFFECTS,
         ]);
@@ -365,8 +372,8 @@ impl IotaClient {
                     self.client
                         .execute_transaction(
                             tx.clone(),
-                            Some(mask.clone()),
                             checkpoint_inclusion_timeout_ms,
+                            mask.clone(),
                         )
                         .await
                 })
@@ -400,7 +407,10 @@ impl IotaClient {
             // so the call-level `Result` alone doesn't mean "found".
             let found = match self
                 .client
-                .get_objects(&[(obj_ref.object_id, Some(obj_ref.version))], None)
+                .get_objects_with_versions(
+                    [(obj_ref.object_id, Some(obj_ref.version))],
+                    ObjectReadMask::default(),
+                )
                 .await
             {
                 Ok(envelope) => envelope.into_inner().iter().all(|item| item.is_ok()),
@@ -498,7 +508,9 @@ fn into_anyhow<T>(outcome: Result<Result<T, GrpcError>, GrpcError>) -> anyhow::R
 #[cfg(test)]
 mod tests {
     use super::*;
-    use iota_sdk_types::{ExecutionStatus, GasCostSummary, TransactionDigest, TransactionEffectsV1};
+    use iota_sdk_types::{
+        ExecutionStatus, GasCostSummary, TransactionDigest, TransactionEffectsV1, Version,
+    };
 
     #[test]
     fn gas_used_from_effects_reads_gas_cost_summary() {
