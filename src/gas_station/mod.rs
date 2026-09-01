@@ -88,7 +88,7 @@ mod tests {
         // sponsor -- this test builds its own transaction directly (rather
         // than going through `test_env.rs`'s `create_test_transaction`), so
         // it is fully self-contained and needed no bridging to old types.
-        let keypair = SimpleKeypair::from(Ed25519PrivateKey::generate(rand::rngs::OsRng));
+        let keypair = SimpleKeypair::from(Ed25519PrivateKey::random_with(rand::rngs::OsRng));
         let sender = keypair.public_key().derive_address();
         let tx_kind = TransactionKind::Programmable(ProgrammableTransaction {
             inputs: vec![],

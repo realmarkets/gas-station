@@ -246,9 +246,9 @@ impl From<&Command> for ShadowCommand {
                 modules,
                 dependencies,
             }) => ShadowCommand::Publish(modules.clone(), dependencies.clone()),
-            Command::MakeMoveVector(MakeMoveVector { type_, elements }) => {
+            Command::MakeMoveVector(MakeMoveVector { type_tag, elements }) => {
                 ShadowCommand::MakeMoveVec(
-                    type_.as_ref().map(TypeTag::to_string),
+                    type_tag.as_ref().map(TypeTag::to_string),
                     elements.iter().map(Into::into).collect(),
                 )
             }

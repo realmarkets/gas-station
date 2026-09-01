@@ -66,7 +66,7 @@ impl BenchmarkMode {
             let client = client.clone();
             let stats = stats.clone();
             let handle = tokio::spawn(async move {
-                let keypair = SimpleKeypair::from(Ed25519PrivateKey::generate(OsRng));
+                let keypair = SimpleKeypair::from(Ed25519PrivateKey::random_with(OsRng));
                 let sender = keypair.public_key().derive_address();
                 let mut rng = OsRng;
                 loop {

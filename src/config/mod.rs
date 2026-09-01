@@ -182,9 +182,9 @@ impl Default for TxSignerConfig {
     fn default() -> Self {
         // Only used as a config fallback (e.g. when generating a sample
         // config); never loaded from -- or persisted to -- a real deployment.
-        let keypair = SimpleKeypair::from(iota_sdk_crypto::ed25519::Ed25519PrivateKey::generate(
-            rand::rngs::OsRng,
-        ));
+        let keypair = SimpleKeypair::from(
+            iota_sdk_crypto::ed25519::Ed25519PrivateKey::random_with(rand::rngs::OsRng),
+        );
         Self::Local { keypair }
     }
 }

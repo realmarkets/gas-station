@@ -141,7 +141,7 @@ impl ToolCommand {
                         sidecar_url: "http://localhost:3000".to_string(),
                     }
                 } else {
-                    let keypair = SimpleKeypair::from(Ed25519PrivateKey::generate(rand::rngs::OsRng));
+                    let keypair = SimpleKeypair::from(Ed25519PrivateKey::random_with(rand::rngs::OsRng));
                     new_iota_address = Some(keypair.public_key().derive_address());
                     TxSignerConfig::Local { keypair }
                 };
@@ -212,7 +212,7 @@ impl ToolCommand {
                 );
             }
             ToolCommand::GeneratePrivateKey => {
-                let keypair = SimpleKeypair::from(Ed25519PrivateKey::generate(rand::rngs::OsRng));
+                let keypair = SimpleKeypair::from(Ed25519PrivateKey::random_with(rand::rngs::OsRng));
                 let iota_address = keypair.public_key().derive_address();
                 let bech32_key = keypair.to_bech32().unwrap();
                 let encoded_key = base64ct::Base64::encode_string(&keypair.to_flagged_bytes());

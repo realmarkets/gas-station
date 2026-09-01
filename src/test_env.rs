@@ -23,7 +23,7 @@ use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use iota_sdk_crypto::ed25519::Ed25519PrivateKey;
 use iota_sdk_crypto::simple::SimpleKeypair;
-use iota_sdk_transaction_builder::TransactionBuilderClient;
+use iota_sdk_transaction_builder::{TransactionBuilderClient, TransactionBuilderLedgerClient};
 use iota_sdk_types::{Address, ObjectReference, Transaction, UserSignature};
 use iota_swarm_config::genesis_config::AccountConfig;
 use redis::{Commands, FromRedisValue};
@@ -56,7 +56,7 @@ fn get_available_port(host: &str) -> u16 {
 }
 
 pub async fn start_iota_cluster(init_gas_amounts: Vec<u64>) -> (TestCluster, Arc<dyn TxSigner>) {
-    let keypair = SimpleKeypair::from(Ed25519PrivateKey::generate(rand::rngs::OsRng));
+    let keypair = SimpleKeypair::from(Ed25519PrivateKey::random_with(rand::rngs::OsRng));
     let sponsor = keypair.public_key().derive_address();
     let cluster = TestClusterBuilder::new()
         .with_accounts(vec![

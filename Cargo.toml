@@ -8,20 +8,20 @@ repository = "https://github.com/iotaledger/gas-station"
 
 [dependencies]
 
-iota-sdk-types = { package = "iota-sdk-types", git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "e4e5e09b690f0ac63698f252382b4423470debd6", features = [
+iota-sdk-types = { package = "iota-sdk-types", git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "0311cac8b35fa2301c40c2cb088765a2c6185e7f", features = [
   "hash",
   "serde",
   "rand",
 ] }
-iota-sdk-crypto = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "e4e5e09b690f0ac63698f252382b4423470debd6", features = [
+iota-sdk-crypto = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "0311cac8b35fa2301c40c2cb088765a2c6185e7f", features = [
   "ed25519",
   "secp256k1",
   "secp256r1",
   "bech32",
 ] }
-iota-sdk-grpc-client = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "e4e5e09b690f0ac63698f252382b4423470debd6" }
-iota-sdk-grpc-types = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "e4e5e09b690f0ac63698f252382b4423470debd6" }
-iota-sdk-transaction-builder = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "e4e5e09b690f0ac63698f252382b4423470debd6" }
+iota-sdk-grpc-client = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "0311cac8b35fa2301c40c2cb088765a2c6185e7f" }
+iota-sdk-grpc-types = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "0311cac8b35fa2301c40c2cb088765a2c6185e7f" }
+iota-sdk-transaction-builder = { git = "https://github.com/iotaledger/iota-rust-sdk.git", rev = "0311cac8b35fa2301c40c2cb088765a2c6185e7f" }
 
 
 anyhow = "1.0.75"
@@ -80,8 +80,8 @@ url = { version = "2.5.7", features = ["serde"] }
 indoc = "2"
 rand = "0.8.5"
 wiremock = "0.6.3"
-iota-swarm-config = { git = "https://github.com/iotaledger/iota", rev = "2fad3416fe86fbb83a4d68e57f09457a5b0d693f", package = "iota-swarm-config" }
-test-cluster = { git = "https://github.com/iotaledger/iota", rev = "2fad3416fe86fbb83a4d68e57f09457a5b0d693f", package = "test-cluster" }
+iota-swarm-config = { git = "https://github.com/iotaledger/iota", rev = "1364240360af2d9c984275c8af4819bd4f87a76e", package = "iota-swarm-config" }
+test-cluster = { git = "https://github.com/iotaledger/iota", rev = "1364240360af2d9c984275c8af4819bd4f87a76e", package = "test-cluster" }
 http = "1"
 
 # Patch fastcrypto to the same version the monorepo pins in its own
